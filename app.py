@@ -1,12 +1,13 @@
 import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
-# Cấu hình trang
-st.set_page_config(page_title="Phân tích Stress Toàn diện", page_icon="🧠", layout="wide")
+# 1. CẤU HÌNH TRANG
+st.set_page_config(page_title="Khảo sát Căng thẳng", page_icon="🧠", layout="centered")
 
-# Load dữ liệu và huấn luyện mô hình
+# 2. HUẤN LUYỆN MÔ HÌNH
 @st.cache_resource
 def train_model():
     df = pd.read_csv('StressLevelDataset.csv')
@@ -14,83 +15,69 @@ def train_model():
     y = df['stress_level']
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X, y)
-    return model, X.columns
+    return model
 
-model, feature_names = train_model()
+model = train_model()
 
-st.title("🧠 Công cụ Dự báo & Phân tích Mức độ Căng thẳng")
-st.markdown("Hệ thống sẽ phân tích dựa trên **20 chỉ số tâm - sinh lý** của bạn.")
+# 3. GIAO DIỆN CHÍNH
+st.title("📊 Bảng Khảo sát & Dự báo Stress")
+st.markdown("""
+Chào mừng bạn đến với công cụ đánh giá tâm - sinh lý. 
+Vui lòng đánh giá các chỉ số dưới đây theo thang điểm từ **0 đến 10**.
+""")
 
-# Tạo 4 cột để chia nhóm các chỉ số
-st.header("📋 Nhập thông tin chi tiết")
-tab1, tab2, tab3, tab4 = st.tabs(["🧘 Tâm lý", "🩺 Sinh lý", "🌍 Môi trường & Xã hội", "🏫 Học tập"])
-
-with tab1:
-    col1, col2 = st.columns(2)
-    with col1:
-        anxiety = st.slider("Mức độ lo âu (0-21)", 0, 21, 10)
-        depression = st.slider("Mức độ trầm cảm (0-27)", 0, 27, 10)
-    with col2:
-        self_esteem = st.slider("Lòng tự trọng (0-30)", 0, 30, 20)
-        mental_history = st.selectbox("Tiền sử sức khỏe tâm thần", [0, 1], format_func=lambda x: "Có" if x==1 else "Không")
-
-with tab2:
-    col1, col2 = st.columns(2)
-    with col1:
-        sleep = st.slider("Chất lượng giấc ngủ (0-5)", 0, 5, 3)
-        headache = st.slider("Tần suất đau đầu (0-5)", 0, 5, 1)
-    with col2:
-        bp = st.slider("Chỉ số huyết áp (1-3)", 1, 3, 2)
-        breathing = st.slider("Vấn đề hô hấp (0-5)", 0, 5, 1)
-
-with tab3:
-    col1, col2 = st.columns(2)
-    with col1:
-        noise = st.slider("Mức độ tiếng ồn (0-5)", 0, 5, 2)
-        living = st.slider("Điều kiện sống (0-5)", 0, 5, 3)
-        safety = st.slider("Cảm giác an toàn (0-5)", 0, 5, 4)
-        basic_needs = st.slider("Đáp ứng nhu cầu cơ bản (0-5)", 0, 5, 3)
-    with col2:
-        social_support = st.slider("Hỗ trợ xã hội (0-3)", 0, 3, 2)
-        peer_pressure = st.slider("Áp lực từ bạn bè (0-5)", 0, 5, 2)
-        bullying = st.slider("Mức độ bị bắt nạt (0-5)", 0, 5, 0)
-        extracurricular = st.slider("Hoạt động ngoại khóa (0-5)", 0, 5, 2)
-
-with tab4:
-    col1, col2 = st.columns(2)
-    with col1:
-        academic = st.slider("Kết quả học tập (0-5)", 0, 5, 3)
-        study_load = st.slider("Khối lượng học tập (0-5)", 0, 5, 2)
-    with col2:
-        teacher_rel = st.slider("Mối quan hệ với giáo viên (0-5)", 0, 5, 3)
-        future_career = st.slider("Lo lắng nghề nghiệp tương lai (0-5)", 0, 5, 2)
-
-# Gom tất cả input vào 1 mảng theo đúng thứ tự của file CSV
-user_input = [
-    anxiety, self_esteem, mental_history, depression, headache, bp, sleep,
-    breathing, noise, living, safety, basic_needs, academic, study_load,
-    teacher_rel, future_career, social_support, peer_pressure, extracurricular, bullying
-]
+# 4. BẢNG HƯỚNG DẪN MỨC ĐỘ
+st.info("""
+**📖 HƯỚNG DẪN ĐÁNH GIÁ (Thang điểm 0 - 10):**
+*   **0 - 3 (Thấp/Tốt):** Trạng thái rất ổn định, không có vấn đề hoặc mức độ rất nhẹ.
+*   **4 - 7 (Trung bình):** Bắt đầu có sự ảnh hưởng rõ rệt đến cuộc sống hàng ngày.
+*   **8 - 10 (Cao/Nghiêm trọng):** Ảnh hưởng cực kỳ lớn, mức độ rất nặng hoặc diễn ra liên tục.
+""")
 
 st.divider()
 
-if st.button("🚀 BẮT ĐẦU DỰ BÁO", use_container_width=True):
-    prediction = model.predict([user_input])[0]
-    prob = model.predict_proba([user_input])
-    
-    levels = {0: "THẤP (An toàn) ✅", 1: "TRUNG BÌNH (Cần chú ý) ⚠️", 2: "CAO (Nguy hiểm) 🚨"}
-    
-    # Hiển thị kết quả nổi bật
-    st.markdown(f"<h1 style='text-align: center;'>Mức độ Stress: {levels[prediction]}</h1>", unsafe_allow_html=True)
-    
-    # Đưa ra lời khuyên chi tiết
-    st.subheader("💡 Lời khuyên dựa trên các chỉ số của bạn:")
-    if prediction == 2:
-        st.error("- Bạn nên ưu tiên nghỉ ngơi và tìm kiếm sự hỗ trợ từ chuyên gia tâm lý hoặc người thân ngay lập tức.")
-    elif prediction == 1:
-        st.warning("- Hãy cân bằng lại thời gian học tập và nghỉ ngơi. Tham gia các hoạt động ngoại khóa để giải tỏa căng thẳng.")
-    else:
-        st.success("- Bạn đang duy trì trạng thái tâm lý rất tốt. Hãy tiếp tục lối sống lành mạnh này!")
+# 5. DANH SÁCH 20 CHỈ SỐ KHẢO SÁT (Trên cùng 1 trang)
+st.subheader("📝 Nội dung khảo sát")
 
-    if sleep < 3:
-        st.info("👉 Gợi ý: Chất lượng giấc ngủ của bạn hơi thấp. Hãy thử cải thiện môi trường ngủ và ngủ đủ giấc hơn.")
+# Hàm tạo slider 0-10 nhanh
+def stress_slider(label, help_text):
+    return st.slider(label, 0, 10, 5, help=help_text)
+
+# Nhóm 1: Tâm lý
+st.markdown("#### 🧘 Nhóm Tâm lý & Cảm xúc")
+anxiety_u = stress_slider("1. Mức độ lo âu", "Cảm giác lo lắng, bồn chồn về các vấn đề trong cuộc sống.")
+depression_u = stress_slider("2. Mức độ trầm cảm", "Cảm giác buồn bã, mất hứng thú hoặc tuyệt vọng.")
+self_esteem_u = st.slider("3. Lòng tự trọng (0 là thấp, 10 là rất tự tin)", 0, 10, 5, help="Sự tự tin và đánh giá về giá trị bản thân.")
+mental_history_u = st.radio("4. Bạn có tiền sử vấn đề sức khỏe tâm thần không?", ["Không", "Có"])
+
+# Nhóm 2: Sinh lý
+st.markdown("#### 🩺 Nhóm Sức khỏe Sinh lý")
+sleep_u = st.slider("5. Chất lượng giấc ngủ (0 là rất tệ, 10 là cực tốt)", 0, 10, 5)
+headache_u = stress_slider("6. Tần suất đau đầu", "Mức độ thường xuyên và cường độ đau đầu.")
+bp_u = stress_slider("7. Chỉ số huyết áp", "Đánh giá mức độ bất thường của huyết áp.")
+breathing_u = stress_slider("8. Vấn đề về hô hấp", "Khó thở hoặc nhịp thở không đều khi stress.")
+
+# Nhóm 3: Môi trường & Xã hội
+st.markdown("#### 🌍 Nhóm Môi trường & Xã hội")
+noise_u = stress_slider("9. Mức độ ô nhiễm tiếng ồn", "Tiếng ồn nơi ở hoặc nơi làm việc/học tập.")
+living_u = st.slider("10. Điều kiện sống (0 là tệ, 10 là rất tốt)", 0, 10, 5)
+safety_u = st.slider("11. Cảm giác an toàn (0 là sợ hãi, 10 là rất an toàn)", 0, 10, 5)
+basic_needs_u = st.slider("12. Đáp ứng nhu cầu cơ bản (Ăn, mặc, ở...)", 0, 10, 5)
+social_support_u = st.slider("13. Sự hỗ trợ từ xã hội (Gia đình, bạn bè...)", 0, 10, 5)
+peer_pressure_u = stress_slider("14. Áp lực từ bạn bè/đồng lứa", "Cảm giác phải chạy đua theo người khác.")
+bullying_u = stress_slider("15. Tần suất bị bắt nạt/công kích", "Bị đe dọa hoặc làm phiền bởi người khác.")
+extracurricular_u = st.slider("16. Hoạt động ngoại khóa (Giải trí, thể thao...)", 0, 10, 5)
+
+# Nhóm 4: Học tập
+st.markdown("#### 🏫 Nhóm Học tập & Sự nghiệp")
+academic_u = st.slider("17. Kết quả học tập/Làm việc (0 là rất tệ, 10 là xuất sắc)", 0, 10, 5)
+study_load_u = stress_slider("18. Khối lượng bài vở/Công việc", "Khối lượng công việc bạn phải gánh vác.")
+teacher_rel_u = st.slider("19. Mối quan hệ với Thầy cô/Cấp trên (0 là tệ, 10 là tốt)", 0, 10, 5)
+future_career_u = stress_slider("20. Lo lắng về nghề nghiệp tương lai", "Nỗi sợ hoặc băn khoăn về sự nghiệp.")
+
+# 6. QUY ĐỔI THANG ĐIỂM (Mapping 0-10 về thang gốc của Dataset)
+# Công thức: (giá trị_người_dùng / 10) * max_thang_gốc
+anxiety = anxiety_u * 2.1
+self_esteem = self_esteem_u * 3.0
+mental_history = 1 if mental_history_u == "Có" else 0
+depression = d
