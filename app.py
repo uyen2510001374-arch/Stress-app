@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -80,4 +79,43 @@ future_career_u = stress_slider("20. Lo lắng về nghề nghiệp tương lai"
 anxiety = anxiety_u * 2.1
 self_esteem = self_esteem_u * 3.0
 mental_history = 1 if mental_history_u == "Có" else 0
-depression = d
+depression = depression_u * 2.7
+headache = headache_u * 0.5
+bp = 1 + (bp_u * 0.2) # Quy đổi về khoảng 1-3
+sleep = sleep_u * 0.5
+breathing = breathing_u * 0.5
+noise = noise_u * 0.5
+living = living_u * 0.5
+safety = safety_u * 0.5
+basic_needs = basic_needs_u * 0.5
+academic = academic_u * 0.5
+study_load = study_load_u * 0.5
+teacher_rel = teacher_rel_u * 0.5
+future_career = future_career_u * 0.5
+social_support = social_support_u * 0.3
+peer_pressure = peer_pressure_u * 0.5
+extra_act = extracurricular_u * 0.5
+bullying = bullying_u * 0.5
+
+# 7. DỰ BÁO KẾT QUẢ
+st.divider()
+if st.button("🚀 XEM KẾT QUẢ DỰ BÁO", use_container_width=True):
+    # Tạo mảng input theo đúng thứ tự file CSV
+    features = [[
+        anxiety, self_esteem, mental_history, depression, headache, bp, sleep,
+        breathing, noise, living, safety, basic_needs, academic, study_load,
+        teacher_rel, future_career, social_support, peer_pressure, extra_act, bullying
+    ]]
+    
+    prediction = model.predict(features)[0]
+    
+    st.markdown("### 🔍 Phân tích mức độ Stress:")
+    if prediction == 0:
+        st.success("## Mức độ: THẤP (An toàn)")
+        st.write("Sức khỏe tâm lý của bạn đang rất tốt. Hãy tiếp tục duy trì lối sống này nhé!")
+    elif prediction == 1:
+        st.warning("## Mức độ: TRUNG BÌNH (Cần chú ý)")
+        st.write("Bạn đang có dấu hiệu căng thẳng. Hãy dành thời gian nghỉ ngơi, ngủ đủ giấc và chia sẻ với bạn bè.")
+    else:
+        st.error("## Mức độ: CAO (Nguy hiểm)")
+        st.write("Mức độ stress của bạn đang ở ngưỡng báo động. Bạn nên cân nhắc tìm kiếm sự hỗ trợ từ chuyên gia tâm lý.")
